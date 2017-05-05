@@ -33,6 +33,13 @@ int main()
   uWS::Hub h;
 
   PID pid;
+  //pid.Init(0.15,0.01,10);
+  //pid.Init(0.15,0,1.7);
+  //pid.Init(0.17,0,2.2);
+  pid.Init(0.11,0.005,2.4);
+  //pid.Init(0.15,0,3);
+  
+  pid.cte_prev = 0;
   // TODO: Initialize the pid variable.
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
@@ -57,13 +64,29 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
+          static double throttle = 0.5;
+          double cte_cutoff = 0.3;
+          //double target_speed = 60;
+          if (fabs(cte) < cte_cutoff) {
+            throttle +=0.1;
+            if (throttle >= 0.8) throttle = 0.8;
+          } 
+          else {
+            throttle -=0.1;
+            if (throttle < 0.3) throttle = 0.3;
+
+          }
+
+          pid.UpdateError(cte);
+          steer_value = - pid.TotalError();
+          pid.cte_prev = cte;
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
