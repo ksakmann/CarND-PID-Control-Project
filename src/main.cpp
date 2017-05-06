@@ -33,11 +33,13 @@ int main()
   uWS::Hub h;
 
   PID pid;
-  //pid.Init(0.15,0.01,10);
-  //pid.Init(0.15,0,1.7);
-  //pid.Init(0.17,0,2.2);
-  pid.Init(0.11,0.005,2.4);
-  //pid.Init(0.15,0,3);
+//  pid.Init(0.11,0.005,2.4);
+//  pid.Init(0.11,0.002,2.4);
+  double  Kp = 0.11;
+  double  Ki = 0.005;
+  double  Kd = 2.4;
+
+  pid.Init(Kp,Ki,Kd);
   
   pid.cte_prev = 0;
   // TODO: Initialize the pid variable.
@@ -64,7 +66,16 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
+
           static double throttle = 0.5;
+          static double Kp_init=pid.Kp_;
+          static double Ki_init=pid.Ki_;
+          static double Kd_init=pid.Kd_;
+
+          double Ki = speed/100.0 * Ki_init;
+          double Kp = Kp_init - speed/100 * 0.1;
+          pid.Init(Kp,Ki,Kd_init);
+
           double cte_cutoff = 0.3;
           //double target_speed = 60;
           if (fabs(cte) < cte_cutoff) {
