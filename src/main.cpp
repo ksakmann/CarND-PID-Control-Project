@@ -35,14 +35,14 @@ int main()
   // TODO: Initialize the pid variable.
   // We allow the coefficients to vary linearly as a function of v (here velocity)
   PID pid;
-  double Kp0 = 0.12;
-  double Ki0 = 0.0; // for zero velocity no I term
-  double Kd0 = 2.4;  
-  double alpha_p = -0.001;
-  double alpha_i = 0.00005;
-  double alpha_d = 0.0;
+  double Kp0 = 0.11;
+  double Ki0 = 0.00; 
+  double Kd0 = 4;  
+  double alpha_p = -0.0005;
+  double alpha_i = 0.00025;
+  double alpha_d = -0.0005;
   double  v = 0; 
-  double  mem_frac = 1.0;
+  double  mem_frac = 0.95;
   int n = 200;
   pid.Init(Kp0,Ki0,Kd0,alpha_p,alpha_i,alpha_d,v,mem_frac,n);
 
@@ -68,29 +68,53 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          static int counter = 0;
-          static double throttle = 0.5;
-
+          
           // Update coefficients according to current speed
           pid.UpdateCoefficients(pid.Kp0_, pid.Ki0_, pid.Kd0_, pid.alpha_p_, pid.alpha_i_,pid.alpha_d_, speed);
           pid.UpdateError(cte);
 
-          // Steering Control
-          steer_value = - pid.TotalError();
+          static double throttle = 1;
+          static int brake_iters = 0;
+          static bool brake = false;
 
-          // Throttle control. Brake in emergencies, otherwise go as fast as possible.
-          double cte_cutoff = 0.3;
-          if (fabs(cte) < cte_cutoff) {
-            throttle +=0.1;
-            if (throttle >= 0.7) throttle = 0.7;
-          } 
-          else {
-            throttle -=0.1;
-            if (throttle < 0.3) throttle = 0.3;
+          //if(fabs(cte) > cte_cutoff && brake_iters == 0) {
+          //if( (fabs(cte-pid.cte_prev_) > 0.1  || fabs(cte) > cte_cutoff)  && brake_iters == 0) {
+          if( (fabs(cte-pid.cte_prev_) > 0.09)  && brake_iters == 0) {
+            brake_iters = 3;            
+            brake = true;
           }
 
+          // Steering Control
+          static double steering_prev = 0;
+          steer_value = - pid.TotalError();
+          steer_value = 0.65 * steering_prev + 0.35* steer_value;
+
+          // Throttle control. Brake in emergencies, otherwise go as fast as possible.
+          const double target_speed = 100;
+
+          if(!brake){
+            if (speed < 0.99*target_speed){
+              throttle +=0.1;
+              if (throttle > 1) throttle = 1;
+            } 
+            else if (speed > target_speed) {
+              throttle = 0.5;
+            }
+          } 
+          else {
+            throttle = 0;            
+            brake_iters--;
+            if (brake_iters == 0 ) {
+              brake = false;
+              throttle = 1;
+            }
+            std::cout << brake_iters << std::endl;
+          }
+
+          
+
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          std::cout << "CTE: " << cte << " dcte " << pid.cte_ - pid.cte_prev_ << " i_error " << pid.i_error_ << " p_error_ " << pid.p_error_ << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
