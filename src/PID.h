@@ -6,18 +6,37 @@ public:
   /*
   * Errors
   */
-  double p_error;
-  double i_error;
-  double d_error;
+  double p_error_;
+  double i_error_;
+  double d_error_;
+  double total_error_;
 
-  double cte_prev;
+  /*
+  * External parameter
+  */
+  double v_;
+
+  /*
+  * Trajectory evaluation metrics
+  */
+  int n_;
+  double trajectory_error_;
+
+  /*
+  * cross track error components
+  */
+  double cte_;
+  double cte_prev_;
+  double cte_mem_;
 
   /*
   * Coefficients
   */ 
-  double Kp_;
-  double Ki_;
-  double Kd_;
+  double Kp_, Ki_, Kd_;
+  double Kp0_, Ki0_, Kd0_;
+  double alpha_p_, alpha_i_, alpha_d_;
+
+  double mem_frac_;
 
   /*
   * Constructor
@@ -32,7 +51,12 @@ public:
   /*
   * Initialize PID.
   */
-  void Init(double Kp, double Ki, double Kd);
+  void Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v, double mem_frac, int n);
+
+  /*
+  * Update PID coefficients.
+  */
+  void UpdateCoefficients(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v);
 
   /*
   * Update the PID error variables given cross track error.

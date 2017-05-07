@@ -32,17 +32,19 @@ int main()
 {
   uWS::Hub h;
 
-  PID pid;
-//  pid.Init(0.11,0.005,2.4);
-//  pid.Init(0.11,0.002,2.4);
-  double  Kp = 0.11;
-  double  Ki = 0.005;
-  double  Kd = 2.4;
-
-  pid.Init(Kp,Ki,Kd);
-  
-  pid.cte_prev = 0;
   // TODO: Initialize the pid variable.
+  // We allow the coefficients to vary linearly as a function of v (here velocity)
+  PID pid;
+  double Kp0 = 0.12;
+  double Ki0 = 0.0; // for zero velocity no I term
+  double Kd0 = 2.4;  
+  double alpha_p = -0.001;
+  double alpha_i = 0.00005;
+  double alpha_d = 0.0;
+  double  v = 0; 
+  double  mem_frac = 1.0;
+  int n = 200;
+  pid.Init(Kp0,Ki0,Kd0,alpha_p,alpha_i,alpha_d,v,mem_frac,n);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -66,31 +68,26 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-
+          static int counter = 0;
           static double throttle = 0.5;
-          static double Kp_init=pid.Kp_;
-          static double Ki_init=pid.Ki_;
-          static double Kd_init=pid.Kd_;
 
-          double Ki = speed/100.0 * Ki_init;
-          double Kp = Kp_init - speed/100 * 0.1;
-          pid.Init(Kp,Ki,Kd_init);
+          // Update coefficients according to current speed
+          pid.UpdateCoefficients(pid.Kp0_, pid.Ki0_, pid.Kd0_, pid.alpha_p_, pid.alpha_i_,pid.alpha_d_, speed);
+          pid.UpdateError(cte);
 
+          // Steering Control
+          steer_value = - pid.TotalError();
+
+          // Throttle control. Brake in emergencies, otherwise go as fast as possible.
           double cte_cutoff = 0.3;
-          //double target_speed = 60;
           if (fabs(cte) < cte_cutoff) {
             throttle +=0.1;
-            if (throttle >= 0.8) throttle = 0.8;
+            if (throttle >= 0.7) throttle = 0.7;
           } 
           else {
             throttle -=0.1;
             if (throttle < 0.3) throttle = 0.3;
-
           }
-
-          pid.UpdateError(cte);
-          steer_value = - pid.TotalError();
-          pid.cte_prev = cte;
 
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
