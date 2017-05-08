@@ -35,16 +35,16 @@ int main()
   // TODO: Initialize the pid variable.
   // We allow the coefficients to vary linearly as a function of v (here velocity)
   PID pid;
-  double Kp0 = 0.11;
-  double Ki0 = 0.00; 
-  double Kd0 = 4;  
-  double alpha_p = -0.0005;
+  double Kp0 = 0.12;
+  double Ki0 = 0.00;
+  double Kd0 = 3.5;  
+  double alpha_p = 0.000;
   double alpha_i = 0.00025;
-  double alpha_d = -0.0005;
+  double alpha_d = 0.000;
   double  v = 0; 
   double  mem_frac = 0.95;
-  int n = 200;
-  pid.Init(Kp0,Ki0,Kd0,alpha_p,alpha_i,alpha_d,v,mem_frac,n);
+  
+  pid.Init(Kp0,Ki0,Kd0,alpha_p,alpha_i,alpha_d,v,mem_frac);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -77,23 +77,21 @@ int main()
           static int brake_iters = 0;
           static bool brake = false;
 
-          //if(fabs(cte) > cte_cutoff && brake_iters == 0) {
-          //if( (fabs(cte-pid.cte_prev_) > 0.1  || fabs(cte) > cte_cutoff)  && brake_iters == 0) {
-          if( (fabs(cte-pid.cte_prev_) > 0.09)  && brake_iters == 0) {
-            brake_iters = 3;            
+          if( (fabs(pid.cte_-pid.cte_prev_) > 0.12)  && brake_iters == 0) {
+            brake_iters = 5;            
             brake = true;
           }
 
           // Steering Control
           static double steering_prev = 0;
           steer_value = - pid.TotalError();
-          steer_value = 0.65 * steering_prev + 0.35* steer_value;
+          steer_value = 0.7 * steering_prev + 0.3* steer_value;
 
           // Throttle control. Brake in emergencies, otherwise go as fast as possible.
           const double target_speed = 100;
 
           if(!brake){
-            if (speed < 0.99*target_speed){
+            if (speed < target_speed){
               throttle +=0.1;
               if (throttle > 1) throttle = 1;
             } 
@@ -102,7 +100,7 @@ int main()
             }
           } 
           else {
-            throttle = 0;            
+            throttle = -0.0;          
             brake_iters--;
             if (brake_iters == 0 ) {
               brake = false;

@@ -17,12 +17,6 @@ public:
   double v_;
 
   /*
-  * Trajectory evaluation metrics
-  */
-  int n_;
-  double trajectory_error_;
-
-  /*
   * cross track error components
   */
   double cte_;
@@ -51,7 +45,7 @@ public:
   /*
   * Initialize PID.
   */
-  void Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v, double mem_frac, int n);
+  void Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v, double mem_frac);
 
   /*
   * Update PID coefficients.

@@ -29,7 +29,7 @@ void PID::UpdateCoefficients(double Kp0, double Ki0, double Kd0, double alpha_p,
 	return;
 }
 
-void PID::Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v, double mem_frac, int n) {
+void PID::Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_i,double alpha_d, double v, double mem_frac) {
 
 	PID::UpdateCoefficients(Kp0,Ki0,Kd0,alpha_p,alpha_i,alpha_d,v);
 
@@ -40,8 +40,6 @@ void PID::Init(double Kp0, double Ki0, double Kd0, double alpha_p, double alpha_
 	d_error_ = 0;
 	total_error_ = 0;
 	
-	n_ = n;
-	trajectory_error_ = 0;
 	cte_ = 0;
 	cte_prev_ = 0;
 	cte_mem_ = 0;
@@ -55,7 +53,6 @@ void PID::UpdateError(double cte) {
 	cte_prev_ = cte_;
 	cte_ = cte;
 	cte_mem_ = mem_frac_ * cte_mem_ + cte_;
-	trajectory_error_ += cte_*cte_;
 
 	p_error_ = Kp_* cte_;
 	i_error_ = Ki_ * cte_mem_;
