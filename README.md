@@ -36,6 +36,10 @@ All parameters were tuned manually. The reason for this approach was that slight
    
 Rounds topping out at speeds of 95mph can be acheived this way, but a much safer ride is obtained when the target speed is set to 70mph. This is what is shown in the video linked below. 
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=xGNZnKk0QAw
+" target="_blank"><img src="http://img.youtube.com/vi/xGNZnKk0QAw/0.jpg" 
+alt="PID drive controller" width="240" height="180" border="10" /></a>
+
 ## Dependencies
 
 * cmake >= 3.5
